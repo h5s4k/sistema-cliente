@@ -1,0 +1,16 @@
+# Arquivos Python
+__pycache__/
+*.pyc
+
+# Banco de dados local
+clientes.db
+
+# Build com PyInstaller
+dist/
+build/
+*.spec
+*.exe
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
