@@ -1,8 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from tkinter import filedialog
 import sqlite3
 import os
 import sys
+import re
+import csv
 
 class AppClientesSimplificado:
     def __init__(self, root):
@@ -12,15 +15,13 @@ class AppClientesSimplificado:
         
         # Conexão com SQLite (arquivo local)
         if getattr(sys, 'frozen', False):
-        # Se estiver rodando como executável
+            # Se estiver rodando como executável
             application_path = os.path.dirname(sys.executable)
         else:
-        # Se estiver rodando em desenvolvimento
+            # Se estiver rodando em desenvolvimento
             application_path = os.path.dirname(os.path.abspath(__file__))
     
         self.db_file = os.path.join(application_path, "clientes.db")
-
-
         self.conn = self.conectar_banco()
         self.criar_tabela()
         
@@ -52,6 +53,47 @@ class AppClientesSimplificado:
                 self.conn.commit()
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao criar tabela:\n{e}")
+
+    def importar_csv(self):
+        """Importa clientes de um arquivo CSV"""
+        caminho_arquivo = filedialog.askopenfilename(
+            title="Selecione o arquivo CSV",
+            filetypes=[("Arquivos CSV", "*.csv")]
+        )
+        
+        if not caminho_arquivo:
+            return
+        
+        try:
+            with open(caminho_arquivo, newline='', encoding='utf-8') as csvfile:
+                leitor = csv.DictReader(csvfile)
+                inseridos = 0
+                for linha in leitor:
+                    nome = linha["nome"].strip()
+                    email = linha.get("email", "").strip()
+                    telefone = linha["telefone"].strip()
+
+                    if not nome or not telefone:
+                        continue  # ignora entradas incompletas
+
+                    # Verifica duplicidade
+                    cursor = self.conn.cursor()
+                    cursor.execute("SELECT * FROM clientes WHERE telefone = ? OR (email = ? AND email != '')", 
+                                 (telefone, email))
+                    if cursor.fetchone():
+                        continue  # já existe, ignora
+
+                    # Insere no banco
+                    cursor.execute("INSERT INTO clientes (nome, email, telefone) VALUES (?, ?, ?)",
+                                (nome, email, telefone))
+                    inseridos += 1
+
+                self.conn.commit()
+                self.carregar_clientes()
+                messagebox.showinfo("Importação concluída", f"{inseridos} cliente(s) importado(s) com sucesso!")
+
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao importar CSV:\n{e}")
     
     def criar_widgets(self):
         """Cria a interface gráfica"""
@@ -82,8 +124,9 @@ class AppClientesSimplificado:
         frame_lista = tk.LabelFrame(self.root, text="Clientes Cadastrados", padx=10, pady=10)
         frame_lista.pack(padx=10, pady=5, fill="both", expand=True)
         
-        # Treeview para exibir clientes
-        self.tree = ttk.Treeview(frame_lista, columns=("ID", "Nome", "Email", "Telefone"), show="headings")
+        # Treeview para exibir clientes com seleção múltipla
+        self.tree = ttk.Treeview(frame_lista, columns=("ID", "Nome", "Email", "Telefone"), 
+                               show="headings", selectmode='extended')
         
         # Configuração das colunas
         colunas = [
@@ -102,18 +145,22 @@ class AppClientesSimplificado:
         # Frame de botões
         frame_botoes = tk.Frame(frame_lista)
         frame_botoes.pack(pady=5)
-        
+
         # Botão Atualizar
         btn_atualizar = tk.Button(frame_botoes, text="Atualizar", command=self.carregar_clientes, width=15)
         btn_atualizar.pack(side="left", padx=5)
         
-        # Botão Excluir
-        btn_excluir = tk.Button(frame_botoes, text="Excluir", command=self.excluir_cliente, width=15)
+        # Botão Excluir Selecionados
+        btn_excluir = tk.Button(frame_botoes, text="Excluir Selecionados", command=self.excluir_clientes_selecionados, width=15)
         btn_excluir.pack(side="left", padx=5)
         
-        # Botão Editar
+        # Botão Editar (para edição única)
         btn_editar = tk.Button(frame_botoes, text="Editar", command=self.editar_cliente, width=15)
         btn_editar.pack(side="left", padx=5)
+
+        # Botão Importar CSV
+        btn_importar_csv = tk.Button(frame_botoes, text="Importar CSV", command=self.importar_csv, width=15)
+        btn_importar_csv.pack(side="left", padx=5)
     
     def cadastrar_cliente(self):
         """Cadastra um novo cliente"""
@@ -121,16 +168,47 @@ class AppClientesSimplificado:
         email = self.entry_email.get().strip()
         telefone = self.entry_telefone.get().strip()
         
-        # Validação dos campos
-        if not nome or not email or not telefone:
-            messagebox.showwarning("Aviso", "Preencha todos os campos!")
+        # verifica o padrão de email:
+        def email_valido(email):
+            padrao = r'^[\w\.-]+@[\w\.-]+\.\w{2,4}$'
+            return re.match(padrao, email)
+        
+        if email and not email_valido(email):
+            messagebox.showwarning("Aviso", "Email inválido!")
+            return
+
+        # Valida telefone, aceita apenas números com 10 ou 11 dígitos (sem letras ou símbolos)
+        def telefone_valido(telefone):
+            return telefone.isdigit() and len(telefone) in [10, 11]
+        
+        if not telefone_valido(telefone):
+            messagebox.showwarning("Aviso", "Telefone inválido! Use apenas números (10 ou 11 dígitos).")
+            return
+
+        # Validação dos campos obrigatórios
+        if not nome or not telefone:
+            messagebox.showwarning("Aviso", "Nome e telefone são obrigatórios!")
             return
         
         try:
             if self.conn:
                 cursor = self.conn.cursor()
+    
+                # Verifica duplicidade de telefone (obrigatório)
+                cursor.execute("SELECT * FROM clientes WHERE telefone = ?", (telefone,))
+                if cursor.fetchone():
+                    messagebox.showwarning("Aviso", "Telefone já cadastrado!")
+                    return
+
+                # Verifica duplicidade de email, se informado
+                if email:
+                    cursor.execute("SELECT * FROM clientes WHERE email = ?", (email,))
+                    if cursor.fetchone():
+                        messagebox.showwarning("Aviso", "Email já cadastrado!")
+                        return
+
                 cursor.execute("INSERT INTO clientes (nome, email, telefone) VALUES (?, ?, ?)", 
-                               (nome, email, telefone))
+                             (nome, email, telefone))
                 self.conn.commit()
                 messagebox.showinfo("Sucesso", "Cliente cadastrado com sucesso!")
                 self.limpar_campos()
@@ -156,35 +234,47 @@ class AppClientesSimplificado:
         except sqlite3.Error as err:
             messagebox.showerror("Erro SQLite", f"Falha ao carregar clientes:\n{err}")
     
-    def excluir_cliente(self):
-        """Exclui o cliente selecionado"""
-        selecionado = self.tree.selection()
-        if not selecionado:
-            messagebox.showwarning("Aviso", "Selecione um cliente para excluir!")
+    def excluir_clientes_selecionados(self):
+        """Exclui todos os clientes selecionados na treeview"""
+        selecionados = self.tree.selection()
+        if not selecionados:
+            messagebox.showwarning("Aviso", "Selecione um ou mais clientes para excluir!")
             return
         
-        id_cliente = self.tree.item(selecionado)["values"][0]
+        # Obtém os IDs dos clientes selecionados
+        ids_clientes = [self.tree.item(item)["values"][0] for item in selecionados]
         
-        if messagebox.askyesno("Confirmar", "Deseja realmente excluir este cliente?"):
+        confirmacao = messagebox.askyesno(
+            "Confirmar Exclusão",
+            f"Deseja realmente excluir os {len(ids_clientes)} cliente(s) selecionado(s)?"
+        )
+        
+        if confirmacao:
             try:
                 if self.conn:
                     cursor = self.conn.cursor()
-                    cursor.execute("DELETE FROM clientes WHERE id = ?", (id_cliente,))
+                    # Usamos uma única execução com parâmetros para todos os IDs
+                    placeholders = ','.join(['?'] * len(ids_clientes))
+                    cursor.execute(f"DELETE FROM clientes WHERE id IN ({placeholders})", ids_clientes)
                     self.conn.commit()
-                    messagebox.showinfo("Sucesso", "Cliente excluído com sucesso!")
+                    messagebox.showinfo("Sucesso", f"{len(ids_clientes)} cliente(s) excluído(s) com sucesso!")
                     self.carregar_clientes()
             except sqlite3.Error as err:
-                messagebox.showerror("Erro SQLite", f"Falha ao excluir:\n{err}")
+                messagebox.showerror("Erro SQLite", f"Falha ao excluir clientes:\n{err}")
     
     def editar_cliente(self):
-        """Edita o cliente selecionado"""
-        selecionado = self.tree.selection()
-        if not selecionado:
+        """Edita o cliente selecionado - agora verifica seleção única"""
+        selecionados = self.tree.selection()
+        if not selecionados:
             messagebox.showwarning("Aviso", "Selecione um cliente para editar!")
             return
         
+        if len(selecionados) > 1:
+            messagebox.showwarning("Aviso", "Selecione apenas um cliente para editar!")
+            return
+        
         # Obtém os dados atuais
-        item = self.tree.item(selecionado)
+        item = self.tree.item(selecionados[0])
         id_cliente = item["values"][0]
         nome_atual = item["values"][1]
         email_atual = item["values"][2]
@@ -217,13 +307,45 @@ class AppClientesSimplificado:
             novo_email = entry_email_edit.get().strip()
             novo_telefone = entry_telefone_edit.get().strip()
             
-            if not novo_nome or not novo_email or not novo_telefone:
-                messagebox.showwarning("Aviso", "Preencha todos os campos!")
+            # Validações
+            def email_valido(email):
+                padrao = r'^[\w\.-]+@[\w\.-]+\.\w{2,4}$'
+                return re.match(padrao, email)
+            
+            if novo_email and not email_valido(novo_email):
+                messagebox.showwarning("Aviso", "Email inválido!")
+                return
+
+            def telefone_valido(telefone):
+                return telefone.isdigit() and len(telefone) in [10, 11]
+            
+            if not telefone_valido(novo_telefone):
+                messagebox.showwarning("Aviso", "Telefone inválido! Use apenas números (10 ou 11 dígitos).")
+                return
+
+            if not novo_nome or not novo_telefone:
+                messagebox.showwarning("Aviso", "Nome e telefone são obrigatórios!")
                 return
             
             try:
                 if self.conn:
                     cursor = self.conn.cursor()
+                    
+                    # Verifica se o telefone já existe (em outro cliente)
+                    cursor.execute("SELECT id FROM clientes WHERE telefone = ? AND id != ?", 
+                                  (novo_telefone, id_cliente))
+                    if cursor.fetchone():
+                        messagebox.showwarning("Aviso", "Telefone já cadastrado para outro cliente!")
+                        return
+                    
+                    # Verifica se o email já existe (em outro cliente)
+                    if novo_email:
+                        cursor.execute("SELECT id FROM clientes WHERE email = ? AND id != ?", 
+                                     (novo_email, id_cliente))
+                        if cursor.fetchone():
+                            messagebox.showwarning("Aviso", "Email já cadastrado para outro cliente!")
+                            return
+
                     cursor.execute("""UPDATE clientes 
                                     SET nome = ?, email = ?, telefone = ? 
                                     WHERE id = ?""", 
@@ -254,4 +376,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = AppClientesSimplificado(root)
     root.mainloop()
-    
