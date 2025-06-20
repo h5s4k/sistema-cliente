@@ -12,10 +12,25 @@ Este projeto foi criado como parte do meu aprendizado pessoal em:
 - Empacotamento de aplicações com PyInstaller
 - Organização de projetos em múltiplos diretórios
 
+## ✨ Funcionalidades
+
+- **Cadastro de clientes**: insere nome, e-mail e telefone no banco de dados.
+- **Listagem automática**: exibe todos os clientes cadastrados ao iniciar o sistema.
+- **Busca por nome**: filtra os clientes digitando parte do nome.
+- **Edição de registros**: permite selecionar um cliente e atualizar seus dados.
+- **Exclusão de clientes**: remove registros com confirmação.
+- **Importação de dados via CSV**: permite carregar uma lista de clientes a partir de um arquivo `.csv`, facilitando a migração de dados.
+- **Interface gráfica com Tkinter**: intuitiva, responsiva e fácil de usar.
+- **Mensagens de feedback**: exibe alertas de sucesso ou erro com `messagebox`.
+- **Banco de dados local (SQLite)**: persistência dos dados no arquivo `clientes.db`.
+- **Executável independente (.exe)**: pode ser executado sem precisar abrir terminal ou instalar Python.
+- **Compatível com Windows**: ideal para uso pessoal ou acadêmico em ambientes Windows.
+
 ## ⚙️ Tecnologias Utilizadas
 
 - Python 3.x
 - SQLite
+- Tkinter
 - PyInstaller
 - VS Code (ambiente de desenvolvimento)
 - Sistema operacional Windows
@@ -23,8 +38,6 @@ Este projeto foi criado como parte do meu aprendizado pessoal em:
 ## 🚀 Como Executar
 
 ### ✅ Executar sem terminal
-
-Para facilitar o uso, foi gerado um executável da aplicação com **PyInstaller**:
 
 1. Acesse a pasta `dist/`
 2. Localize o arquivo `sistemaBancoDeDados-2504023.exe`
@@ -63,6 +76,7 @@ Durante o desenvolvimento deste projeto, aprofundei meus conhecimentos em:
 - Manipulação de banco de dados SQLite via Python
 - Organização de código e separação de responsabilidades
 - Empacotamento de projetos Python para distribuição
+- Leitura e importação de arquivos CSV com `pandas`
 - Versionamento de código com Git e GitHub
 
 ## 📌 Nota
@@ -70,6 +84,7 @@ Durante o desenvolvimento deste projeto, aprofundei meus conhecimentos em:
 Este projeto tem fins **educacionais** e está em constante evolução à medida que avanços nos estudos são incorporados.
 
 ---
-Atualiza README com instruções e informações do projeto
-Feito por **Francinaldo** 😎
+
+Feito com 💻 por **Francinaldo**
+😄📁✨
 ´´´
