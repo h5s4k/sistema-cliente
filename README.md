@@ -1,148 +1,75 @@
-Resumo do Projeto: Sistema de Gerenciamento de Clientes
-Francinaldo de Castro Silva
+```markdown
+# Sistema Cliente
 
-🎯 Objetivo
-Uma aplicação simples para desktop de cadastro e gestão de clientes, com armazenamento local e interface intuitiva, utilizando:
-- Python (linguagem principal)
-- Tkinter (interface gráfica)
-- SQLite (banco de dados embutido)
-- PyInstaller (empacotamento como executável)
+Projeto desenvolvido com o objetivo de aprofundar o conhecimento em **Python** e manipulação de **banco de dados**, explorando bibliotecas populares e boas práticas de estruturação de projetos.
 
-🔧 Funcionalidades Principais
-1. CRUD Completo
-   - Create: Cadastro de novos clientes (nome, e-mail, telefone)
-   - Read: Listagem em tabela interativa (Treeview)
-   - Update: Edição de registros existentes
-   - Delete: Exclusão com confirmação
+## 📚 Objetivo
 
-2. Persistência de Dados
-   - Armazenamento automático em banco de dados SQLite (`clientes.db`)
-   - Criação automática da tabela se não existir
+Este projeto foi criado como parte do meu aprendizado pessoal em:
 
-3. Interface Amigável
-   - Janelas de diálogo para edição
-   - Validação de campos obrigatórios
+- Criação de interfaces e funcionalidades com Python
+- Manipulação de arquivos `.db` com bibliotecas específicas
+- Empacotamento de aplicações com PyInstaller
+- Organização de projetos em múltiplos diretórios
 
-4. Distribuição
-   - Conversão para executável (.exe) com ícone personalizado
+## ⚙️ Tecnologias Utilizadas
 
-⚙️ Tecnologias e Bibliotecas
-| Componente        | Finalidade                          |  
-|-------------------|-------------------------------------|  
-| tkinter           | Interface gráfica                   |  
-| sqlite3           | Armazenamento local                 |  
-| pyinstaller       | Criação do executável               |  
-| messagebox        | Exibição de alertas e confirmações  |  
+- Python 3.x
+- SQLite
+- PyInstaller
+- VS Code (ambiente de desenvolvimento)
+- Sistema operacional Windows
 
+## 🚀 Como Executar
 
-📂 Estrutura do Código
-código python
+### ✅ Executar sem terminal
 
-class AppClientesSimplificado:
-    def __init__(self):
-        # Configura janela principal
-        # Conexão com SQLite
-        # Cria widgets (campos de texto, botões, tabela)
+Para facilitar o uso, foi gerado um executável da aplicação com **PyInstaller**:
 
-    def cadastrar_cliente(self):
-        # Valida e insere dados no banco
+1. Acesse a pasta `dist/`
+2. Localize o arquivo `sistemaBancoDeDados-2504023.exe`
+3. Dê **duplo clique** no `.exe` para abrir o sistema de cadastro de clientes
 
-    def carregar_clientes(self):
-        # Preenche a tabela com registros do banco
+> Não é necessário ter Python instalado para executar o `.exe`, desde que os arquivos gerados pelo PyInstaller estejam na mesma pasta.
 
-    def editar_cliente(self):
-        # Abre janela de edição e salva alterações
+### 💻 Executar via código-fonte
 
-    def excluir_cliente(self):
-        # Remove registro com confirmação
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/h5s4k/sistema-cliente.git
+   ```
+2. Acesse a pasta do projeto:
+   ```bash
+   cd sistema-cliente
+   ```
+3. Execute o script principal:
+   ```bash
+   python sistemaBancoDeDados-2504023.py
+   ```
 
+## 📂 Estrutura do Projeto
 
-🚀 Como Executar
-1. Requisitos: Python 3.8+
-2. Instalação:
-   bash
-   pip install pyinstaller
-   
-3. Execução:
-   bash
-   python app_clientes.py
-   
-4. Compilar para .exe:
-   bash
-   pyinstaller --onefile --windowed --icon=icone.ico app_clientes.py
+- `sistemaBancoDeDados-2504023.py` – script principal da aplicação
+- `clientes.db` – banco de dados local
+- `build/` e `dist/` – pastas de empacotamento com PyInstaller
+- `.spec` – configuração para gerar executável
+- `.gitignore` – controle dos arquivos ignorados no Git
+- `README.md` – este arquivo :)
 
+## 🧠 Aprendizados
 
-Resumo do Código: Sistema de Clientes
+Durante o desenvolvimento deste projeto, aprofundei meus conhecimentos em:
 
-Estrutura Principal
-código python
+- Manipulação de banco de dados SQLite via Python
+- Organização de código e separação de responsabilidades
+- Empacotamento de projetos Python para distribuição
+- Versionamento de código com Git e GitHub
 
-class AppClientesSimplificado:
-    def __init__(self, root):
-        # 1. Configura janela principal (Tkinter)
-        # 2. Conecta ao SQLite (clientes.db)
-        # 3. Cria interface:
-        #    - Campos: nome, email, telefone
-        #    - Treeview (tabela)
-        #    - Botões: Cadastrar/Editar/Excluir
+## 📌 Nota
 
-Métodos Essenciais
+Este projeto tem fins **educacionais** e está em constante evolução à medida que avanços nos estudos são incorporados.
 
-| Método             | Funcionalidade                                                        |
-|--------------------|-----------------------------------------------------------------------|
-|conectar_banco()    | Estabelece conexão com o SQLite (cria `clientes.db` se não existir)   |
-|criar_tabela()      | Cria tabela `clientes` (id, nome, email, telefone)                    |
-|cadastrar_cliente() | Valida campos → insere no banco → atualiza tabela                     |
-|carregar_clientes() | Busca registros no SQLite → exibe na Treeview                         |
-|editar_cliente()    | Abre popup de edição → salva alterações no banco                      |
-|excluir_cliente()   | Remove registro com confirmação (messagebox)                          |
-|limpar_campos()     | Reseta os campos de entrada                                           |
-
-
-Fluxo de Dados
-1. Entrada
-   - Usuário preenche campos (nome/email/telefone)
-   - Validação: `if not nome or not email...`
-
-2. Processamento
-   - Operações SQL:
-     código python
-
-     cursor.execute("INSERT INTO clientes VALUES (?, ?, ?)", (nome, email, telefone))
-
-3. Saída
-   - Atualização automática da Treeview
-   - Feedback visual (messagebox de sucesso/erro)
-
-
-Destaques Técnicos
--Tratamento de Erros:
-  código python
-
-  try:
-      cursor.execute(...)
-  except sqlite3.Error as err:
-      messagebox.showerror("Erro SQLite", f"Falha: {err}")
-
--Gerenciamento de Recursos:
-  código python
-
-  def __del__(self):
-      if self.conn:
-          self.conn.close()  # Fecha conexão ao sair
-
--Path Dinâmico:
-  código python
-
-  if getattr(sys, 'frozen', False):
-      application_path = os.path.dirname(sys.executable)  # Para .exe
-
-
-Extensibilidade
-- Facilmente modificável para adicionar:
-  - Novos campos (ex: endereço)
-  - Filtros por nome/email
-  - Exportação para CSV
-
-Código completo: [GitHub](https://github.com/h5s4k/sistema-cliente)
-   
+---
+Atualiza README com instruções e informações do projeto
+Feito por **Francinaldo** 😎
+´´´
